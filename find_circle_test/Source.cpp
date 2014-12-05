@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 	//imwrite( str+"_binary.jpg", img_threshold );
 	vector<Vec3f> circles;
 	/// Apply the Hough Transform to find the circles 
-	HoughCircles( img_threshold, circles, CV_HOUGH_GRADIENT, 1,src2.rows/8, 200, 100, 0, 0 );
+	HoughCircles( img_threshold, circles, CV_HOUGH_GRADIENT,1,img_threshold.rows/4, 100, 100, 600, 900 );
 
 	cvtColor(  img_threshold,  img_threshold, CV_GRAY2RGB);
 	/// Draw the circles detected
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
    
 	/// Show your results
 	//namedWindow( "Hough Circle Transform Demo", CV_WINDOW_AUTOSIZE );
-	imshow( "Hough Circle Transform Demo", img_threshold  );
+	//imshow( "Hough Circle Transform Demo", img_threshold  );
   
 	imwrite( str+"_fc.jpg", img_threshold );
 	waitKey(0);
