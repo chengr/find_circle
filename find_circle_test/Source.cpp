@@ -11,54 +11,73 @@ Mat find_circle_and_draw_rec(Mat src_img,int size);
 Mat adjust(Mat src_img);
 void mouse(int event, int x, int y, int flags, void* param);
 void draw_rec(int n);
-void sub_draw(int n);
+Mat sub_draw(Mat i1,Mat i2);
+Mat diff1(Mat i1,Mat i2);
+Mat diff2(Mat i1,Mat i2);
+Mat diff3(Mat i1,Mat i2);
+Mat diff4(Mat i1,Mat i2);
+Mat diff5(Mat i1,Mat i2);
 double pi =3.141592653589793;
 bool fg=true;
 int adj_x= 0;
 Mat adj_img;
-String str[]={"std","中央有高對比白點","外圈有高對比黑點","外圍有區域黑","外圍有高對比黑點或白點","有黑線","中央有白點","大範圍的雜色點","不規則雜點加線"};
+String str[]={"std","中央有高對比白點","外圈有高對比黑點","外圍有區域黑","外圍有高對比黑點或白點","有黑線","中央有白點","大範圍的雜色點","不規則雜點加線"};//9
 int cn=8;
 /** @function main */
 int main(int argc, char** argv)
 {
 	/*
-	Mat src = imread("LENS/"+str[8]+".jpg", 1 );
+	Mat src = imread("LENS/"+str[cn]+".jpg", 1 );
 	src=find_circle_and_draw_rec(src,720);
 	adj_img=src;
 	namedWindow("adjust", CV_WINDOW_AUTOSIZE );
 	imshow("adjust",src);
 	cvSetMouseCallback("adjust", mouse,NULL);
-
-	imwrite( "LENS/after/TEST_"+str[0]+"_test.jpg", src );
+	imwrite( "LENS/after/TEST_"+str[cn]+"_test.jpg", src );
 	*/
 	/*
-	for(int i=0;i<sizeof(str);i++){
-		fg=true;
-		Mat src = imread("LENS/"+str[i]+".jpg", 1 );
-		//src=find_circle(src);
-		src=find_circle_and_draw_rec(src,720);
-		namedWindow("adjust", CV_WINDOW_AUTOSIZE );
-		cvSetMouseCallback("adjust", mouse,NULL);
-		adj_img=src;
-		imwrite( "LENS/after/TEST_"+str[i]+"_test.jpg", src );
-		 while(true){
-			 imshow("adjust",src);
-			 
-			 //cout<<"TEST"<<str[0]<<endl;
-			if(!fg)
-			{
-				break;
-			}
-		}
-
-	}
-	*/
 	for(int i=0;i<9;i++){
 		Mat src = imread("LENS/"+str[i]+".jpg", 1 );
 		//src=find_circle(src);
 		src=find_circle(src);
 		imwrite( "LENS/after/sqr_"+str[i]+".jpg", src );
 	}
+	*/
+	/*
+	for(int i=0;i<9;i++){
+		Mat org = imread("LENS/after/Adj_std.jpg", 1 );
+		Mat src2 = imread("LENS/after/Adj_"+str[i]+".jpg", 1 );
+		imwrite( "LENS/after/Diff_(外圍有高對比黑點或白點)"+str[i]+".jpg", diff4(org,src2));
+	}*/
+	
+	for(int i=0;i<9;i++){
+		Mat src = imread("LENS/after/Adj_"+str[i]+".jpg", 1 );
+		src.convertTo(src, -1, 2.5, -100);// Enter the alpha value [1.0-3.0]: 2.2 Enter the beta value [0-100]: 50
+		//GaussianBlur( src ,src , Size(9,9), 0, 0 );
+		//blur(src ,src , Size(7,7));
+		Mat element2(7,7,CV_8U,Scalar(1));  
+		dilate(src,src,element2);  
+
+		Mat element(11,11,CV_8U,Scalar(1));  
+		erode(src,src,element);  
+		
+		src=diff4(src,src);
+		imwrite( "LENS/after/ErDX_"+str[i]+".jpg", src);
+	}
+	
+	/*
+	for(int i=0;i<9;i++){
+		Mat src = imread("LENS/after/Adj_"+str[i]+".jpg", 1 );
+		src.convertTo(src, -1, 2.0, -150);// Enter the alpha value [1.0-3.0]: 2.2 Enter the beta value [0-100]: 50
+		//GaussianBlur( src ,src , Size(3,3), 0, 0 );
+		Mat element(5,5,CV_8U,Scalar(1));  
+		erode(src,src,element); 
+		Mat element2(11,11,CV_8U,Scalar(1));  
+		dilate(src,src,element2);  
+		src=diff5(src,src);
+		imwrite( "LENS/after/EandDX_"+str[i]+".jpg", src);
+	}
+	*/
 	waitKey(0);
 	return 0;
 }
@@ -110,6 +129,8 @@ Mat find_circle(Mat src_img){
 			result.at<Vec3b>(Point(x1,y1)) = color;
 		}
 	}
+
+	
 	return result;
 }
 Mat find_circle_and_draw_rec(Mat src_img,int size){
@@ -187,7 +208,7 @@ Mat find_circle_and_draw_rec(Mat src_img,int size){
 
 
 	}
-
+	//GaussianBlur( result,result, Size(9,9), 2, 2 );
 	return result;
 }
 Mat adjust(Mat src_img){
@@ -202,6 +223,7 @@ Mat adjust(Mat src_img){
 			result.at<Vec3b>(Point(x,y)) = color;
 		}
 	}
+	//GaussianBlur( result,result, Size(11,11), 0, 0);
 	imwrite( "LENS/after/Adj_"+str[cn]+".jpg", result );
 	return result;
 }
@@ -214,7 +236,7 @@ void mouse(int event, int x, int y, int flags, void* param)
 			adj_x=x;
 			Mat result=adjust(adj_img);
 
-			cn++;
+			//cn++;
 			fg=false;
 		}
 	}
@@ -334,49 +356,177 @@ void draw_rec(int n){
 	}
 	imwrite( "LENS/after/"+str+".jpg", result );
 }
-void sub_draw(int n){
-	Mat src_std, src_dt;//汙損1 汙點1 表面瑕疵1 斷裂1 標準1
-	stringstream ss;
-	ss<<n;
-	String str="DSC06"+ss.str();
-	cout<<"TEST"<<str<<endl;
-	//String str="DSC06537";
-	/// Read the image DSC06657
-	//src_std = imread("LENS/標準1.jpg", 1 );
-	src_dt = imread("LENS/after/"+str+".jpg", 1 );
-	if( !src_dt.data )
-	{return; }
-
-	//cvtColor( src_std,src_std, CV_RGB2GRAY );
-	cvtColor( src_dt,src_dt, CV_RGB2GRAY );
-
-	imwrite( "LENS/after/"+str+"_gry.jpg", src_dt );
-
-	//threshold(src_std, src_std, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-	threshold(src_dt, src_dt, 0, 255, CV_THRESH_OTSU+CV_THRESH_BINARY);
-	/// Convert it to gray
-	
-
-	//namedWindow( "binary", CV_WINDOW_AUTOSIZE );
-	//imshow("binary", src_std);
-	/*
-	Mat result(1800,1800 , CV_8UC3, Scalar(0,0,0));
-	cvtColor( result, result, CV_RGB2GRAY );
-	for(int i =0 ;i<1800;i++){
-		for(int j =0 ;j<1800;j++){
-			int color=src_std.at<uchar>(Point(i,j));
-			int color2=src_dt.at<uchar>(Point(i,j));
-
-			
-			result.at<uchar>(Point(i,j)) = color-color2;
+Mat sub_draw(Mat i1,Mat i2){
+	Mat result=i1;
+	Vec3b color;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			Vec3b color1=i1.at<Vec3b>(Point(x,y));
+			Vec3b color2=i2.at<Vec3b>(Point(x,y));
+			color[0]=abs(color1[0]-color2[0]);
+			color[1]=abs(color1[1]-color2[1]);
+			color[2]=0;
+			/*
+			color[0]=abs(color1[0]-color2[0]);
+			color[1]=abs(color1[1]-color2[1]);
+			color[2]=abs(color1[2]-color2[2]);
+			*/
+			result.at<Vec3b>(Point(x,y)) = color;
 		}
 	}
-		*/
-			
+	return result;
+}
 
-	/// Show your results
-	//namedWindow( "result", CV_WINDOW_AUTOSIZE );
-	//imshow( "result", src_dt  );
-  
-	imwrite( "LENS/after/"+str+"_ by.jpg", src_dt );
+Mat diff1(Mat i1,Mat i2){
+	cvtColor( i1,i1, CV_RGB2GRAY );
+	cvtColor( i2,i2, CV_RGB2GRAY );
+	Mat result=i1;
+	uchar color;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			uchar color1=i1.at<uchar>(Point(x,y));
+			uchar color2=i2.at<uchar>(Point(x,y));
+			color=abs(color1-color2);
+			result.at<uchar>(Point(x,y)) = color;
+		}
+	}
+	cvtColor(result,result, CV_GRAY2RGB );
+	return result;
+}
+//不規則雜點加線
+Mat diff2(Mat i1,Mat i2){
+	Mat result=i1;
+	int up=130;
+	int dn=90;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			Vec3b color=i2.at<Vec3b>(Point(x,y));
+			if(y<300){
+				if(color[0]<up&&color[1]<up&&color[2]<up&&color[0]>dn&&color[1]>dn&&color[2]>dn){
+					color[0]=255;
+					color[1]=255;
+					color[2]=255;
+				}
+				else{
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+
+			}
+			else if(y>500&&y<670){
+				if(color[0]<dn&&color[1]<dn&&color[2]<dn){
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+				else{
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+			}
+			else{
+				color[0]=0;
+				color[1]=0;
+				color[2]=0;
+			}
+			result.at<Vec3b>(Point(x,y)) = color;
+		}
+	}
+	return result;
+}
+//Adj_大範圍的雜色點
+Mat diff3(Mat i1,Mat i2){
+	Mat result=i1;
+	int up=100;
+	int dn=60;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			Vec3b color=i2.at<Vec3b>(Point(x,y));
+			if(y<300){
+				if(color[0]<up&&color[1]<up&&color[2]<up&&color[0]>dn&&color[1]>dn&&color[2]>dn){
+					color[0]=255;
+					color[1]=255;
+					color[2]=255;
+				}
+				else{
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+
+			}
+			else{
+				color[0]=0;
+				color[1]=0;
+				color[2]=0;
+			}
+			result.at<Vec3b>(Point(x,y)) = color;
+		}
+	}
+	return result;
+}
+//外圍黑
+Mat diff4(Mat i1,Mat i2){
+	//GaussianBlur( i2, i2, Size(9,9), 0, 0 );
+	Mat result=i1;
+	int up=50;
+	int dn=-1;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			Vec3b color=i2.at<Vec3b>(Point(x,y));
+			if(y>500&&y<670){
+				if(color[2]<up&&color[2]>dn&&color[0]<up&&color[0]>dn&&color[1]<up&&color[1]>dn){
+					color[0]=255;
+					color[1]=255;
+					color[2]=255;
+				}
+				else{
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+
+			}
+			else{
+				color[0]=0;
+				color[1]=0;
+				color[2]=0;
+			}
+			result.at<Vec3b>(Point(x,y)) = color;
+		}
+	}
+	return result;
+}
+//中央高對比白點
+Mat diff5(Mat i1,Mat i2){
+	Mat result=i1;
+	int up=256;
+	int dn=50;
+	for(int x=0;x<i1.cols;x++){
+		for(int y=0;y<i1.rows;y++){
+			Vec3b color=i2.at<Vec3b>(Point(x,y));
+			if(y<320&&y>170){
+				if(color[0]<up&&color[1]<up&&color[2]<up&&color[0]>dn&&color[1]>dn&&color[2]>dn){
+					color[0]=255;
+					color[1]=255;
+					color[2]=255;
+				}
+				else{
+					color[0]=0;
+					color[1]=0;
+					color[2]=0;
+				}
+
+			}
+			else{
+				color[0]=0;
+				color[1]=0;
+				color[2]=0;
+			}
+			result.at<Vec3b>(Point(x,y)) = color;
+		}
+	}
+	return result;
 }
